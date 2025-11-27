@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  n8n:
+    # Gebruikt de Dockerfile in deze repository
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: custom-n8n:latest
+    restart: always
+    ports:
+      - 5678:5678
+    environment:
+      # Belangrijke Omgevingsvariabelen (moet je instellen in Railway)
+      - N8N_HOST=${N8N_HOST}
+      - WEBHOOK_URL=https://${N8N_HOST}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      
+      # Database Verbinding (linkt naar de 'postgres' service)
+      - DB_TYPE=postgres
+      - DB_POSTGRES_HOST=postgres
+      - DB_POSTGRES_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRES_USER=${POSTGRES_USER}
+      - DB_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # Fix voor Railway proxy issues
+      - N8N_EXPRESS_SETTINGS_TRUST_PROXY=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  n8n_data:
+  postgres_data:
